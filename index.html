@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Aether — beautiful real-time weather with 16-day forecasts, air quality, and interactive maps.">
+  <meta name="theme-color" content="#060810" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#dde3ef" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:title"       content="Aether Weather">
+  <meta property="og:description" content="Real-time weather, 16-day forecasts, AQI, and interactive maps.">
+  <meta property="og:image"       content="./icons/icon-512.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Aether Weather">
+  <meta name="twitter:description" content="Real-time weather with glassmorphism UI.">
+  <meta name="twitter:image"       content="./icons/icon-512.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b8af0'/><text y='23' x='5' font-size='21'>⛅</text></svg>">
+
+  <title>Aether — Weather</title>
+
+  <!-- DNS prefetch for all external resources -->
+  <link rel="preconnect"    href="https://fonts.googleapis.com">
+  <link rel="preconnect"    href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch"  href="https://api.open-meteo.com">
+  <link rel="dns-prefetch"  href="https://air-quality-api.open-meteo.com">
+  <link rel="dns-prefetch"  href="https://geocoding-api.open-meteo.com">
+  <link rel="dns-prefetch"  href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch"  href="https://tile.openweathermap.org">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="dark-mode">
+
+<noscript>
+  <div style="position:fixed;inset:0;background:#060810;color:#eef2f8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:sans-serif;text-align:center;padding:24px;z-index:9999">
+    <span style="font-size:52px">⛅</span>
+    <h1 style="font-size:22px;font-weight:300">Aether requires JavaScript</h1>
+    <p style="color:rgba(238,242,248,0.5);max-width:340px;font-size:14px">Please enable JavaScript in your browser to use this app.</p>
+  </div>
+</noscript>
+
+<!-- ── Loading overlay ────────────────────────────────────────────────── -->
+<div id="loading-overlay" role="status" aria-label="Loading weather data">
+  <div class="loader-ring"></div>
+  <span class="loader-text">Loading weather…</span>
+</div>
+
+<!-- ── Notifications ──────────────────────────────────────────────────── -->
+<div id="notif-container" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SETTINGS MODAL
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="settings-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="settings-title">Settings</h2>
+      <button id="settings-close" class="modal-close" aria-label="Close settings">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Temperature Unit -->
+      <div class="settings-section">
+        <h3>Temperature Unit</h3>
+        <div class="option-group">
+          <label class="option-label"><input type="radio" name="unit" value="celsius" checked> °C — Celsius</label>
+          <label class="option-label"><input type="radio" name="unit" value="fahrenheit"> °F — Fahrenheit</label>
+        </div>
+      </div>
+
+      <!-- Theme -->
+      <div class="settings-section">
+        <h3>Theme</h3>
+        <div class="option-group">
+          <label class="option-label"><input type="radio" name="theme" value="dark"  checked> 🌙 Dark</label>
+          <label class="option-label"><input type="radio" name="theme" value="light"> ☀️ Light</label>
+          <label class="option-label"><input type="radio" name="theme" value="auto">  ⚙️ System</label>
+        </div>
+      </div>
+
+      <!-- Auto Refresh -->
+      <div class="settings-section">
+        <h3>Auto Refresh</h3>
+        <select id="auto-refresh-select" class="settings-select">
+          <option value="0">Off</option>
+          <option value="5">Every 5 minutes</option>
+          <option value="10">Every 10 minutes</option>
+          <option value="30">Every 30 minutes</option>
+          <option value="60">Every hour</option>
+        </select>
+      </div>
+
+      <!-- Default City -->
+      <div class="settings-section">
+        <h3>Default City on Startup</h3>
+        <input type="text" id="default-city-input" class="settings-input" placeholder="e.g. Kolkata" autocomplete="off">
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-section danger-zone">
+        <h3>Danger Zone</h3>
+        <button id="clear-cities-btn" class="danger-btn">🗑 Clear all saved cities</button>
+        <button id="reset-app-btn"    class="danger-btn">↺ Reset app to defaults</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="save-settings-btn" class="save-btn">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     MAP OVERLAY — completely independent, NOT inside modal-overlay system
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="map-overlay" style="display:none">
+  <!-- The actual Leaflet container — sized by JS before init -->
+  <div id="weather-map"></div>
+
+  <!-- Controls float above map -->
+  <div id="map-controls">
+    <button class="layer-btn active" data-layer="temp">🌡️ Temp</button>
+    <button class="layer-btn" data-layer="clouds">☁️ Clouds</button>
+    <button class="layer-btn" data-layer="precipitation">🌧️ Rain</button>
+    <button class="layer-btn" data-layer="wind">💨 Wind</button>
+  </div>
+
+  <button id="map-close" aria-label="Close map" onclick="MapModule.close()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     APP WRAPPER
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="app-wrapper">
+
+  <!-- ── Desktop Sidebar ────────────────────────────────────────────── -->
+  <aside class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-logo" aria-label="Aether Weather">A</div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" title="Weather" aria-label="Weather" aria-current="page">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      </button>
+
+      <button class="nav-btn" id="nav-cities" title="Saved Cities" aria-label="Saved Cities">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </button>
+
+      <button class="nav-btn" id="nav-map" title="Weather Map" aria-label="Weather Map">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+          <line x1="9" y1="3" x2="9" y2="18"/>
+          <line x1="15" y1="6" x2="15" y2="21"/>
+        </svg>
+      </button>
+
+      <button class="nav-btn" id="nav-settings" title="Settings" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+        <span id="theme-icon">☀️</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ───────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="search-wrapper" role="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search city…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search for a city"
+          enterkeyhint="search"
+        >
+        <button id="search-btn">Search</button>
+      </div>
+
+      <button id="geo-btn" aria-label="Use my current location">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+        </svg>
+        <span class="geo-label">My Location</span>
+      </button>
+    </div>
+
+    <!-- ── Weather grid ─────────────────────────────────────────────── -->
+    <div class="weather-grid">
+
+      <!-- Hero -->
+      <div class="hero-panel" role="region" aria-label="Current weather">
+        <div id="hero-bg" class="hero-bg" aria-hidden="true"></div>
+
+        <div class="hero-content">
+          <!-- Location -->
+          <div class="location-row">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span id="city-name">Kolkata</span>
+            <span id="country-badge">IN</span>
+          </div>
+
+          <!-- Condition + icon -->
+          <div class="hero-body">
+            <div class="hero-left">
+              <span class="forecast-tag">Current Weather</span>
+              <h1 id="condition-label">Loading…</h1>
+              <p  id="condition-desc"></p>
+              <!-- Retry button shown on error -->
+              <button id="retry-btn" aria-label="Retry loading weather">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Try Again
+              </button>
+            </div>
+            <div class="hero-icon-wrap" aria-hidden="true">
+              <img id="hero-icon" src="" alt="Weather icon" width="90" height="90">
+              <span id="hero-icon-emoji"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hourly strip -->
+        <div class="hourly-section" role="region" aria-label="Hourly forecast">
+          <div class="hourly-label">Today's Hourly</div>
+          <div id="hourly-cards" role="list"></div>
+          <div class="chart-wrap">
+            <canvas id="hourly-chart" aria-label="Temperature chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div class="right-panel">
+
+        <!-- Date / Time / Main Temp -->
+        <div class="datetime-card glass-card" role="region" aria-label="Temperature and time">
+          <div id="current-time" aria-live="polite">—</div>
+          <div id="current-date">—</div>
+          <div class="main-temp-row">
+            <span id="main-temp">—</span>
+            <span id="main-unit">°C</span>
+          </div>
+          <div class="wind-row">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17.7 7.7a2.5 2.5 0 111.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1111 8H2"/><path d="M12.6 19.4A2 2 0 1114 16H2"/>
+            </svg>
+            <span id="wind-desc">—</span>
+          </div>
+        </div>
+
+        <!-- Forecast -->
+        <div class="forecast-card glass-card" role="region" aria-label="Day forecast">
+          <div class="forecast-header-label">Day Forecast</div>
+          <div class="tab-row" role="tablist" aria-label="Forecast range">
+            <button class="tab-btn active" data-days="4"  role="tab" aria-selected="true">4 days</button>
+            <button class="tab-btn"        data-days="10" role="tab" aria-selected="false">10 days</button>
+            <button class="tab-btn"        data-days="16" role="tab" aria-selected="false">16 days</button>
+          </div>
+          <div id="forecast-list" role="list"></div>
+        </div>
+
+      </div>
+    </div>
+    <!-- /weather-grid -->
+
+    <!-- ── Bottom row ───────────────────────────────────────────────── -->
+    <div class="bottom-row">
+
+      <!-- Air Conditions -->
+      <div class="air-card glass-card" role="region" aria-label="Air conditions">
+        <div class="card-header"><h3>Air Conditions</h3></div>
+        <div class="air-grid">
+
+          <div class="air-item">
+            <div class="air-icon-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
+              Real Feel
+            </div>
+            <div id="feels-like" class="air-value">—</div>
+          </div>
+
+          <div class="air-item">
+            <div class="air-icon-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1114 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/></svg>
+              Wind Speed
+            </div>
+            <div id="wind-speed" class="air-value">—</div>
+          </div>
+
+          <div class="air-item">
+            <div class="air-icon-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 17.58A5 5 0 0018 8h-1.26A8 8 0 104 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>
+              Rain Chance
+            </div>
+            <div id="rain-chance" class="air-value">—</div>
+          </div>
+
+          <div class="air-item">
+            <div class="air-icon-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              UV Index
+            </div>
+            <div id="uv-index" class="air-value">—</div>
+          </div>
+
+          <div class="air-item wide">
+            <div class="air-icon-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22a7 7 0 007-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 007 7z"/></svg>
+              Humidity
+            </div>
+            <div id="humidity" class="air-value">—</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Air Quality Index -->
+      <div class="aqi-card glass-card" id="aqi-section" role="region" aria-label="Air quality index">
+        <div class="card-header">
+          <h3>Air Quality</h3>
+          <span id="aqi-badge" class="aqi-badge"></span>
+        </div>
+        <div class="aqi-score-row">
+          <div id="aqi-score">—</div>
+          <span style="font-size:11px;color:var(--t3);margin-bottom:5px">AQI</span>
+        </div>
+        <p id="aqi-desc"></p>
+        <div class="aqi-bar"><div id="aqi-bar-fill"></div></div>
+        <div class="pollutants-grid">
+          <div class="pollutant-row"><span>PM2.5</span><span id="pm25">—</span></div>
+          <div class="pollutant-row"><span>PM10</span> <span id="pm10">—</span></div>
+          <div class="pollutant-row"><span>O₃ Ozone</span><span id="ozone">—</span></div>
+          <div class="pollutant-row"><span>NO₂</span>  <span id="no2">—</span></div>
+        </div>
+      </div>
+
+      <!-- Sunrise & Sunset -->
+      <div class="sun-card glass-card" role="region" aria-label="Sunrise and sunset">
+        <div class="card-header"><h3>Sunrise & Sunset</h3></div>
+        <div class="sun-items">
+          <div class="sun-item">
+            <div class="sun-icon-wrap is-sunrise" aria-hidden="true">🌅</div>
+            <div class="sun-label">Sunrise</div>
+            <div id="sunrise-time" class="sun-time">—</div>
+          </div>
+          <div class="sun-middle">
+            <div class="daylight-bar"><div id="daylight-progress"></div></div>
+            <div id="daylight-duration"></div>
+          </div>
+          <div class="sun-item">
+            <div class="sun-icon-wrap is-sunset" aria-hidden="true">🌇</div>
+            <div class="sun-label">Sunset</div>
+            <div id="sunset-time" class="sun-time">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- /bottom-row -->
+
+    <!-- ── Saved Cities ──────────────────────────────────────────────── -->
+    <section class="saved-cities-section" id="saved-cities-section" aria-label="Saved cities">
+      <div class="section-header">
+        <h3>Saved Cities</h3>
+        <button id="add-city-btn" class="add-city-btn" aria-label="Save current city">
+          ＋ Add Current City
+        </button>
+      </div>
+      <div id="saved-cities-grid" role="list"></div>
+    </section>
+
+  </main>
+
+  <!-- ── Mobile Bottom Navigation ──────────────────────────────────── -->
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+
+    <button class="mob-btn active" aria-label="Weather" aria-current="page">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      Weather
+    </button>
+
+    <button class="mob-btn" id="mob-cities" aria-label="Saved cities">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Cities
+    </button>
+
+    <button class="mob-btn" id="mob-map" aria-label="Weather map">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+        <line x1="9" y1="3" x2="9" y2="18"/>
+        <line x1="15" y1="6" x2="15" y2="21"/>
+      </svg>
+      Map
+    </button>
+
+    <button class="mob-btn" id="mob-settings" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      Settings
+    </button>
+
+    <button class="mob-btn" id="mob-theme" aria-label="Toggle theme">
+      <span id="mob-theme-icon" style="font-size:18px" aria-hidden="true">☀️</span>
+      Theme
+    </button>
+
+  </nav>
+
+</div>
+<!-- /app-wrapper -->
+
+<!-- ── Scripts (load order matters) ──────────────────────────────────── -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/map.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

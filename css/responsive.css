@@ -1,0 +1,175 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   CRITICAL: Mobile nav base styles MUST be declared BEFORE any @media block.
+   If .mobile-nav { display:none } comes AFTER the @media that sets display:flex,
+   the base style wins and the nav never appears on mobile. — CSS cascade rule.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Mobile bottom nav — base (hidden on desktop) ────────────────────────── */
+.mobile-nav {
+  display: none;                    /* overridden to flex inside ≤768px */
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--mob-nav-h);
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top: 1px solid var(--glass-b);
+  z-index: 200;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+}
+
+.mob-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  border-radius: var(--r-s);
+  color: var(--t2);
+  font-size: 10px;
+  font-weight: 500;
+  transition: color var(--ease), background var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-btn:hover,
+.mob-btn.active { color: var(--blue); }
+.mob-btn svg    { flex-shrink: 0; }
+
+/* ── Extra large screens: ≥ 1500px ──────────────────────────────────────── */
+@media (min-width: 1500px) {
+  .main-content  { padding: 24px 36px 52px; gap: 22px; }
+  .weather-grid  { grid-template-columns: 1fr 390px; }
+  #main-temp     { font-size: 88px; }
+  #saved-cities-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+}
+
+/* ── Large: 1200 – 1499px ────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .weather-grid { grid-template-columns: 1fr 310px; gap: 14px; }
+  .bottom-row   { grid-template-columns: 1.1fr 1fr 1fr; }
+  #main-temp    { font-size: 66px; }
+}
+
+/* ── Medium: 1024 – 1199px ───────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .main-content { padding: 16px 18px 100px; }
+
+  .weather-grid { grid-template-columns: 1fr; }
+
+  .right-panel  {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .bottom-row { grid-template-columns: 1fr 1fr; }
+  .bottom-row .sun-card { grid-column: 1 / -1; }
+
+  /* Geo button label hidden — icon only */
+  .geo-label { display: none; }
+  #geo-btn   { padding: 10px 12px; }
+}
+
+/* ── Tablet: 768 – 1023px ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Hide desktop sidebar, show mobile nav */
+  .sidebar    { display: none; }
+  .mobile-nav { display: flex; }   /* ← key: must come AFTER base display:none */
+
+  .main-content {
+    margin-left: 0;
+    padding: 12px 14px 80px;
+    gap: 14px;
+  }
+
+  .top-bar { flex-wrap: wrap; gap: 8px; }
+  .search-wrapper { max-width: 100%; flex: 1 1 200px; }
+
+  .weather-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  .right-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .hero-panel    { min-height: 300px; }
+  .hero-content  { padding: 18px 18px 12px; }
+  #condition-label { font-size: 26px; }
+  #hero-icon     { width: 72px; height: 72px; }
+  #hero-icon-emoji { font-size: 60px; }
+
+  /* 8 hourly → show all but tighter */
+  #hourly-cards  { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 1px; }
+  .h-time        { font-size: 9px; }
+  .h-icon        { width: 22px; height: 22px; }
+  .h-temp        { font-size: 11px; }
+
+  .bottom-row    { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bottom-row .sun-card { grid-column: 1 / -1; }
+
+  #saved-cities-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+  #notif-container { bottom: 76px; right: 12px; left: 12px; }
+  .notif           { min-width: unset; max-width: 100%; }
+
+  .map-controls-bar { flex-wrap: wrap; gap: 4px; padding: 4px; }
+  .layer-btn        { font-size: 11px; padding: 6px 10px; }
+
+  .modal-box { border-radius: var(--r-l); }
+}
+
+/* ── Small mobile: ≤ 480px ───────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .main-content   { padding: 10px 10px 76px; gap: 12px; }
+
+  .hero-panel     { min-height: 260px; }
+  #condition-label { font-size: 22px; }
+  #hero-icon      { width: 60px; height: 60px; }
+  #hero-icon-emoji { font-size: 52px; }
+
+  /* Stack right panel vertically on very small screens */
+  .right-panel { grid-template-columns: 1fr; }
+
+  #main-temp  { font-size: 56px; }
+
+  .air-grid   { grid-template-columns: 1fr 1fr; }
+
+  /* Hourly: 6 slots on tiny screens */
+  #hourly-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .hourly-card:nth-child(7),
+  .hourly-card:nth-child(8) { display: none; }
+
+  .bottom-row { grid-template-columns: 1fr; }
+
+  /* Forecast: hide condition text to save space */
+  .fc-cond    { display: none; }
+
+  #saved-cities-grid { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); }
+
+  .pollutants-grid   { grid-template-columns: 1fr; }
+
+  .sun-items  { gap: 6px; }
+  .sun-time   { font-size: 15px; }
+
+  .option-group   { flex-direction: column; }
+  .option-label   { justify-content: flex-start; }
+
+  .map-controls-bar {
+    top: unset; bottom: 14px;
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Touch device tweaks ─────────────────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Always show remove button on touch (no hover state) */
+  .city-remove { opacity: 1; }
+  /* Slightly larger tap targets */
+  .tab-btn  { padding: 8px 0; }
+  .nav-btn  { width: 50px; height: 50px; }
+  .mob-btn  { padding: 10px 14px; }
+}

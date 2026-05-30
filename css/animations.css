@@ -1,0 +1,59 @@
+/* ── Keyframes ───────────────────────────────────────────────────────────── */
+@keyframes spin          { to { transform: rotate(360deg); } }
+@keyframes fadeIn        { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp       { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown     { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes floatY        { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes pulse         { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.45); opacity: 0.7; } }
+@keyframes sunPulse      { 0%,100% { box-shadow: 0 0 18px rgba(251,146,60,0.22); } 50% { box-shadow: 0 0 30px rgba(251,146,60,0.45); } }
+@keyframes markerBounce  { from { transform: rotate(-45deg) scale(0); } to { transform: rotate(-45deg) scale(1); } }
+@keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes shimmer       { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+
+/* ── Applied animations ──────────────────────────────────────────────────── */
+.hero-panel { animation: fadeIn 0.45s ease; }
+
+.glass-card  { animation: slideUp 0.38s ease both; }
+.bottom-row > *:nth-child(1) { animation-delay: 0.04s; }
+.bottom-row > *:nth-child(2) { animation-delay: 0.08s; }
+.bottom-row > *:nth-child(3) { animation-delay: 0.12s; }
+
+.hourly-card:nth-child(1) { animation: slideDown 0.28s ease 0.00s both; }
+.hourly-card:nth-child(2) { animation: slideDown 0.28s ease 0.04s both; }
+.hourly-card:nth-child(3) { animation: slideDown 0.28s ease 0.08s both; }
+.hourly-card:nth-child(4) { animation: slideDown 0.28s ease 0.12s both; }
+.hourly-card:nth-child(5) { animation: slideDown 0.28s ease 0.16s both; }
+.hourly-card:nth-child(6) { animation: slideDown 0.28s ease 0.20s both; }
+.hourly-card:nth-child(7) { animation: slideDown 0.28s ease 0.24s both; }
+.hourly-card:nth-child(8) { animation: slideDown 0.28s ease 0.28s both; }
+
+.forecast-row { animation: fadeIn 0.3s ease both; }
+.city-card    { animation: slideUp 0.32s ease both; }
+
+.sidebar-logo { background-size: 200% 200%; }
+
+/* ── Hover lifts (smooth) ────────────────────────────────────────────────── */
+.air-card, .aqi-card, .sun-card, .datetime-card, .forecast-card {
+  transition:
+    transform var(--ease),
+    box-shadow var(--ease),
+    background var(--ease),
+    border-color var(--ease);
+}
+.air-card:hover,
+.aqi-card:hover,
+.sun-card:hover,
+.datetime-card:hover,
+.forecast-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-m);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1     !important;
+    transition-duration:      0.01ms !important;
+  }
+}

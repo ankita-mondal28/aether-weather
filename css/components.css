@@ -1,0 +1,228 @@
+/* ── Air Conditions card ─────────────────────────────────────────────────── */
+.air-card { padding: 18px 20px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-header h3 { font-family: var(--f-display); font-size: 13px; font-weight: 500; color: var(--t2); letter-spacing: 0.02em; }
+
+.air-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.air-item {
+  padding: 13px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: var(--r-m);
+  transition: background 0.15s ease;
+}
+.air-item:hover { background: rgba(255,255,255,0.06); }
+.air-item.wide  { grid-column: 1 / -1; }
+
+.air-icon-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; color: var(--t3); margin-bottom: 6px;
+}
+.air-icon-label svg { color: var(--t3); flex-shrink: 0; }
+.air-value { font-family: var(--f-display); font-size: 20px; font-weight: 500; color: var(--t1); }
+
+/* ── AQI card ────────────────────────────────────────────────────────────── */
+.aqi-card { padding: 18px 20px; }
+
+.aqi-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.aqi-score-row { display: flex; align-items: flex-end; gap: 10px; margin: 12px 0 8px; }
+#aqi-score { font-family: var(--f-display); font-size: 46px; font-weight: 200; color: var(--t1); line-height: 1; }
+#aqi-desc  { font-size: 12px; color: var(--t3); line-height: 1.5; margin-bottom: 12px; }
+
+.aqi-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
+#aqi-bar-fill { height: 100%; border-radius: 2px; transition: width 0.9s cubic-bezier(0.4,0,0.2,1), background 0.3s ease; width: 0%; }
+
+.pollutants-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pollutant-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; padding: 6px 10px;
+  background: rgba(255,255,255,0.03); border-radius: 8px;
+}
+.pollutant-row span:first-child { color: var(--t3); }
+.pollutant-row span:last-child  { color: var(--t2); font-weight: 500; }
+
+.aqi-na { font-size: 13px; color: var(--t3); text-align: center; padding: 20px 0; }
+
+/* ── Sunrise / Sunset card ───────────────────────────────────────────────── */
+.sun-card { padding: 18px 20px; }
+.sun-items { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.sun-item  { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sun-icon-wrap {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 21px;
+}
+.sun-icon-wrap.is-sunrise {
+  background: rgba(251,146,60,0.14);
+  animation: sunPulse 3.5s ease-in-out infinite;
+}
+.sun-icon-wrap.is-sunset {
+  background: rgba(139,92,246,0.14);
+  animation: sunPulse 3.5s ease-in-out 1.75s infinite;
+}
+.sun-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--t3); }
+.sun-time  { font-family: var(--f-display); font-size: 17px; font-weight: 500; color: var(--t1); }
+.sun-middle { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.daylight-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+#daylight-progress { height: 100%; background: linear-gradient(90deg,#fb923c,#8b5cf6); border-radius: 2px; transition: width 0.9s cubic-bezier(0.4,0,0.2,1); }
+#daylight-duration { font-size: 11px; color: var(--t3); white-space: nowrap; }
+
+/* ── Saved city cards ────────────────────────────────────────────────────── */
+.city-card {
+  padding: 15px; cursor: pointer; position: relative; overflow: hidden;
+}
+.city-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(91,138,240,0.06) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.18s ease;
+}
+.city-card:hover { transform: translateY(-3px); box-shadow: var(--sh-m); }
+.city-card:hover::before { opacity: 1; }
+
+.city-remove {
+  position: absolute; top: 10px; right: 10px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t3); opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  z-index: 2;
+}
+.city-card:hover .city-remove { opacity: 1; }
+.city-remove:hover { background: rgba(248,113,113,0.15); color: var(--err); }
+
+.city-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.city-name    { font-family: var(--f-display); font-size: 15px; font-weight: 500; color: var(--t1); }
+.city-country { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.city-icon    { width: 36px; height: 36px; object-fit: contain; }
+.city-icon-emoji { font-size: 30px; }
+.city-temp    { font-family: var(--f-display); font-size: 28px; font-weight: 200; color: var(--t1); line-height: 1; }
+.city-temp span { font-size: 14px; color: var(--t3); }
+.city-cond    { font-size: 12px; color: var(--t2); margin: 4px 0 10px; }
+.city-meta    { display: flex; gap: 12px; font-size: 11px; color: var(--t3); }
+
+.empty-cities {
+  grid-column: 1 / -1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; padding: 44px 20px; text-align: center; color: var(--t3);
+}
+.empty-cities p    { font-size: 15px; color: var(--t2); }
+.empty-cities span { font-size: 12px; }
+
+/* ── Settings form ───────────────────────────────────────────────────────── */
+.settings-section { margin-bottom: 22px; }
+.settings-section h3 {
+  font-family: var(--f-display); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--t3); margin-bottom: 10px;
+}
+.option-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.option-label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 15px; border-radius: var(--r-s);
+  border: 1px solid var(--glass-b);
+  font-size: 13px; color: var(--t2); cursor: pointer;
+  background: var(--glass);
+  transition: background var(--ease), border-color var(--ease), color var(--ease);
+}
+.option-label input[type="radio"] { display: none; }
+.option-label:has(input:checked) {
+  background: var(--blue-dim); border-color: rgba(91,138,240,0.4); color: var(--blue);
+}
+.option-label:hover { background: var(--glass-h); }
+
+.settings-select, .settings-input {
+  width: 100%; background: var(--glass); border: 1px solid var(--glass-b);
+  border-radius: var(--r-s); padding: 10px 14px; color: var(--t1); font-size: 14px;
+  outline: none; transition: border-color var(--ease), box-shadow var(--ease);
+}
+.settings-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(238,242,248,0.35)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  padding-right: 36px;
+}
+.settings-select:focus, .settings-input:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(91,138,240,0.13);
+}
+.settings-input::placeholder { color: var(--t3); }
+
+.save-btn {
+  width: 100%; background: var(--blue); color: #fff;
+  border-radius: var(--r-s); padding: 12px;
+  font-size: 14px; font-weight: 600; font-family: var(--f-display);
+  transition: background var(--ease), transform 0.12s ease, box-shadow var(--ease);
+}
+.save-btn:hover { background: #6b9af5; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(91,138,240,0.3); }
+.save-btn:active { transform: translateY(0); }
+
+.danger-zone { border-top: 1px solid rgba(248,113,113,0.18); padding-top: 18px; }
+.danger-zone h3 { color: rgba(248,113,113,0.55); }
+.danger-btn {
+  display: block; width: 100%; margin-bottom: 8px;
+  padding: 10px 14px; text-align: left;
+  background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.18);
+  border-radius: var(--r-s); color: var(--err); font-size: 13px;
+  transition: background var(--ease), border-color var(--ease);
+}
+.danger-btn:hover { background: rgba(248,113,113,0.14); border-color: rgba(248,113,113,0.38); }
+
+/* ── Notifications ───────────────────────────────────────────────────────── */
+.notif {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--r-m); border: 1px solid;
+  box-shadow: var(--sh-m); font-size: 13px;
+  min-width: 250px; max-width: 360px;
+  pointer-events: all;
+  transform: translateX(115%); opacity: 0;
+  transition: transform var(--ease-spring), opacity 0.3s ease;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.notif-show { transform: translateX(0); opacity: 1; }
+.notif-hide { transform: translateX(115%); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
+
+.notif-success { background: rgba(74,222,128,0.11); border-color: rgba(74,222,128,0.28); }
+.notif-error   { background: rgba(248,113,113,0.11); border-color: rgba(248,113,113,0.28); }
+.notif-info    { background: rgba(96,165,250,0.11); border-color: rgba(96,165,250,0.28); }
+
+.notif-icon {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  background: currentColor; color: #000;
+}
+.notif-success .notif-icon { color: var(--ok); }
+.notif-error   .notif-icon { color: var(--err); }
+.notif-info    .notif-icon { color: var(--info); }
+.notif-msg   { flex: 1; color: var(--t1); font-size: 13px; }
+.notif-close { color: var(--t3); font-size: 12px; opacity: 0.65; padding: 2px; transition: opacity 0.15s ease; }
+.notif-close:hover { opacity: 1; }
+
+/* ── Map marker ──────────────────────────────────────────────────────────── */
+.map-marker-wrap { position: relative; }
+.map-marker-pin {
+  width: 28px; height: 28px;
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  background: var(--blue); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 12px rgba(91,138,240,0.5);
+  animation: markerBounce 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.map-marker-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+.aether-popup .leaflet-popup-content-wrapper {
+  background: var(--bg2); border: 1px solid var(--glass-bh);
+  border-radius: 10px; color: var(--t1); font-family: var(--f-body);
+  box-shadow: var(--sh-m); padding: 0;
+}
+.aether-popup .leaflet-popup-content { padding: 10px 14px; margin: 0; font-size: 13px; font-weight: 500; }
+.aether-popup .leaflet-popup-tip-container { display: none; }
+.leaflet-tile-pane { filter: brightness(0.82) saturate(1.1); }
+
+/* ── Geo pulse ───────────────────────────────────────────────────────────── */
+.geo-pulse {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ok); animation: pulse 1s ease infinite;
+}
